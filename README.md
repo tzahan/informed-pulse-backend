@@ -1,7 +1,7 @@
 
 # Informed Pulse Backend API  
 
-Informed Pulse is a backend API for a news analysis service. It provides functionalities such as user registration, login, personalized news recommendations, sentiment analysis, news summarization and user interaction tracking. The system integrates with external APIs and MongoDB for efficient data management and processing.  
+Informed Pulse is a news analysis service. This backend API provides functionalities such as user registration, login, personalized news recommendations, sentiment analysi, news summarization and user interaction tracking. The system integrates with external APIs and MongoDB for efficient data management and processing.  
 
 ## Features  
 - **User Management**: Register, login and manage users.  
