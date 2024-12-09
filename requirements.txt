@@ -1,0 +1,12 @@
+fastapi
+pydantic
+pydantic-settings
+pydantic[email]
+uvicorn
+passlib
+python-jose
+pymongo
+bcrypt
+
+google-generativeai
+numpy

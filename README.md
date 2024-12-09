@@ -1,12 +1,11 @@
 
 # Informed Pulse Backend API  
 
-Informed Pulse is a news analysis service. This backend API provides functionalities such as user registration, login, personalized news recommendations, sentiment analysi, news summarization and user interaction tracking. The system integrates with external APIs and MongoDB for efficient data management and processing.  
+Informed Pulse a news analysis service. This backend API provides functionalities such as user registration, login, personalized news recommendations and user interaction tracking. The system integrates with external APIs and MongoDB for efficient data management and processing.  
 
 ## Features  
 - **User Management**: Register, login and manage users.  
 - **Personalized Recommendations**: Provides news recommendations based on user preferences and interaction data.  
-- **Sentiment Analysis & Summarization**: Analyze sentiment and generate concise summaries for news articles.  
 - **User Interactions**: Tracks user interactions with articles to refine recommendations.  
 - **RESTful API**: Well-structured and scalable API built using FastAPI.  
 - **MongoDB Integration**: Efficient storage and retrieval of user and news data.  
@@ -71,7 +70,7 @@ Informed Pulse is a news analysis service. This backend API provides functionali
 ## Folder Structure  
 
 ```plaintext  
-project/
+informed-pulse-backend/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py              # Entry point for the app
@@ -91,4 +90,3 @@ project/
 ├── .env                     # Environment variables
 ├── README.md
 ```  
-
