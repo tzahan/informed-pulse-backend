@@ -21,7 +21,8 @@ def register_user(user: UserCreate):
         "hashed_password": get_password_hash(user.password),
         "date_of_birth": user.date_of_birth.isoformat(),  # Store as ISO string
         "preferences": user.preferences,
-        "interaction_list": []  # Initially empty
+        "interaction_list": [],  # Initially empty
+        "interest_list": []  # Initially empty
     }
     db.user_data.insert_one(user_dict)
     return {"message": "User registered successfully"}
@@ -63,38 +64,55 @@ def add_interaction(request: InteractionRequest, current_user: dict = Depends(ge
         {"$addToSet": {"interaction_list": news_id}}
     )
 
-    if result.modified_count == 0:
-        raise HTTPException(status_code=500, detail="Failed to update interaction list")
-
-    return {"message": f"News ID {news_id} added to interaction list"}
-
-'''
-# Call micreoservice recommender api
-@router.get("/news", summary="Get personalized news recommendations")
-def get_personalized_news(limit: int = 20, current_user: dict = Depends(get_current_user)):
+    # Check if the ID was added or already exists
+    if result.modified_count == 1:
+        return {"message": f"News ID {news_id} added to interaction list"}
+    else:
+        return {"message": f"News ID {news_id} already exists in the interaction list"}
+    
+    
+@router.post("/add-interest")
+def add_interest(request: InteractionRequest, current_user: dict = Depends(get_current_user)):
     """
-    Retrieves personalized news articles based on the user's preferences.
+    Add a news ID to the user's interest list.
     """
-    if not current_user.get("preferences"):
-        raise HTTPException(status_code=400, detail="User has no preferences set")
+    news_id = request.news_id
+    if not news_id:
+        raise HTTPException(status_code=400, detail="News ID is required")
 
-    recommender_api_url = "http://127.0.0.1:8000/recommendations"
-    preferences = " ".join(current_user["preferences"])  # Convert preferences list to a comma-separated string
-    # print(preferences)
-    try:
-        # Call the recommender API
-        response = requests.get(
-            recommender_api_url,
-            params={"preferences": preferences, "limit": limit},
-            # json={"preferences": current_user["preferences"], "limit": limit},
-            timeout=10  # Timeout to avoid hanging
-        )
-        response.raise_for_status()
-        return response.json()  # Assuming the recommender API returns JSON
+    # Add the news ID to the user's interest list
+    result = db.user_data.update_one(
+        {"email": current_user["email"]},
+        {"$addToSet": {"interest_list": news_id}}
+    )
 
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=503, detail=f"Recommender API error: {str(e)}")
-    '''
+    # Check if the ID was added or already exists
+    if result.modified_count == 1:
+        return {"message": f"News ID {news_id} added to interest list"}
+    else:
+        return {"message": f"News ID {news_id} already exists in the interest list"}
+    
+
+@router.delete("/delete-interest")
+def delete_interest(request: InteractionRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Delete a news ID from the user's interest list.
+    """
+    news_id = request.news_id
+    if not news_id:
+        raise HTTPException(status_code=400, detail="News ID is required")
+
+    # Remove the news ID from the user's interest list
+    result = db.user_data.update_one(
+        {"email": current_user["email"]},
+        {"$pull": {"interest_list": news_id}}
+    )
+
+    # Check if the ID was successfully removed
+    if result.modified_count == 1:
+        return {"message": f"News ID {news_id} removed from interest list"}
+    else:
+        raise HTTPException(status_code=404, detail="News ID not found in interest list")
 
 
 @router.delete("/delete/{email}")
@@ -126,13 +144,17 @@ def get_recommendations(limit: int = 10, current_user: dict = Depends(get_curren
     embedding_model = "models/text-embedding-004"
     recommender = PersonalizedRecommender(get_api_key(), embedding_model)
 
-    preferences = " ".join(current_user["preferences"])  # Convert preferences list to a comma-separated string
-    #preferences = user.get("preferences", [])
+    preferences = " ".join(current_user["preferences"])  # Convert list into comma-separated string
     interaction_data = user.get("interaction_list", [])
+    interest_list = set(user.get("interest_list", []))  # Convert interest list to a set for faster lookups
 
-    #print(preferences)
     # Call the recommender system
     recommendations = recommender.recommend(preferences, interaction_data, limit)
+
+    # Add the "is_interested" field for each recommendation
+    for news_item in recommendations:
+        news_item["is_interested"] = news_item.get("_id") in interest_list
+
 
     return {"recommendations": recommendations}
 
